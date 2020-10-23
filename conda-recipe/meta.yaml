@@ -6,6 +6,7 @@ source:
   path: ../
 
 build:
+  noarch: generic
   script: python setup.py install
 
 requirements:
@@ -18,7 +19,7 @@ requirements:
 
 test:
   imports:
-    - or-datasets
+    - or_datasets
 
 about:
   home: https://github.com/flowty/or-datasets

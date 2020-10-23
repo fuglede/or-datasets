@@ -62,9 +62,6 @@ jobs:
     - name: Build conda package
       run: |
         conda build conda-recipe --variants "{ 'version' : ['${{ steps.get_version.outputs.version }}']}" --output-folder conda-packages --no-anaconda-upload
-    - name: Convert conda package to win-64
-      run: |
-        conda convert --platform win-64 conda-packages/linux-64/or_datasets-* --output-dir conda-packages --force
     - uses: actions/upload-artifact@v2
       with:
         name: conda
