@@ -90,7 +90,6 @@ jobs:
       run: | 
         eval "$(conda shell.bash hook)" && conda activate
         conda install --channel ./conda-packages or-datasets --yes
-        conda install networkx --yes
       if: startsWith(matrix.os, 'ubuntu')
     - name: Install conda package (Windows)
       run: | 
@@ -100,7 +99,6 @@ jobs:
         call conda index ./conda-packages
         call conda search --channel ./conda-packages --override-channels
         call conda install --channel ./conda-packages or-datasets --yes
-        call conda install networkx --yes
       if: startsWith(matrix.os, 'windows')
       shell: cmd
 
