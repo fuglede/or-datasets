@@ -175,7 +175,7 @@ jobs:
         path: conda-packages
     - name: Zip conda
       run: |
-        zip -r conda.zip conda-packages/noarch/or_datasets*
+        zip -r conda.zip conda-packages/noarch/or-datasets*
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1

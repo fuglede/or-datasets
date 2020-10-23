@@ -97,7 +97,7 @@ jobs:
     - name: Upload
       run: |
         eval "$(conda shell.bash hook)" && conda activate
-        anaconda -t ${{secrets.ANACONDA_APITOKEN}} upload --user flowty conda-packages/noarch/or_datasets*
+        anaconda -t ${{secrets.ANACONDA_APITOKEN}} upload --user flowty conda-packages/noarch/or-datasets*
     - name: Install
       run: |
         eval "$(conda shell.bash hook)" && conda activate;
