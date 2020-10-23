@@ -93,12 +93,11 @@ jobs:
         conda install anaconda-client --yes
     - name: What conda packages are here
       run: |
-        ls -l conda-packages/linux-64
-        ls -l conda-packages/win-64
+        ls -l conda-packages/noarch
     - name: Upload
       run: |
         eval "$(conda shell.bash hook)" && conda activate
-        anaconda -t ${{secrets.ANACONDA_APITOKEN}} upload --user flowty conda-packages/linux-64/or_datasets* conda-packages/win-64/or_datasets*
+        anaconda -t ${{secrets.ANACONDA_APITOKEN}} upload --user flowty conda-packages/noarch/or_datasets*
     - name: Install
       run: |
         eval "$(conda shell.bash hook)" && conda activate;
