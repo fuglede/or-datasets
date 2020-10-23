@@ -1,0 +1,211 @@
+name: Python Release CI
+
+on:
+  push:
+    tags: version/**
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Get version
+      id: get_version
+      run: |
+        export PACKAGE_VERSION=$(echo ${GITHUB_REF:10} | cut -d "/" -f2)
+        echo ::set-output name=version::$PACKAGE_VERSION
+        echo PACKAGE_VERSION=$PACKAGE_VERSION
+    - name: Get development Version
+      id: get_dev_version
+      run: |
+        export PACKAGE_DEV_VERSION=${{ steps.get_version.outputs.version }}.dev${GITHUB_RUN_NUMBER}
+        echo ::set-output name=version::$PACKAGE_DEV_VERSION
+        echo PACKAGE_DEV_VERSION=$PACKAGE_DEV_VERSION
+    - name: Install dependencies
+      run: |
+        # python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+    - name: Build dev wheel
+      run: | 
+        echo "$(cat or_datasets/_version.py | cut -d "=" -f1) = \"${{ steps.get_dev_version.outputs.version }}\"" > or_datasets/_version.py
+        python setup.py bdist_wheel
+    - name: Twine check
+      run: |
+        twine check dist/*
+    - name: Upload to test
+      run: |
+        twine upload --repository-url https://test.pypi.org/legacy/ dist/* -u __token__ -p ${{secrets.PYPI_TEST_APITOKEN}}
+    - name: Install from test
+      run: |
+        echo ${{ steps.get_dev_version.outputs.version }}
+        for i in 1 2 3 4 5; do pip install --index-url https://test.pypi.org/simple/ --no-deps or-datasets==${{ steps.get_dev_version.outputs.version }} && break || sleep 15; done
+    - name: Build wheel
+      run: | 
+        rm -rf dist
+        echo "$(cat or_datasets/_version.py | cut -d "=" -f1) = \"${{ steps.get_version.outputs.version }}\"" > or_datasets/_version.py
+        python setup.py bdist_wheel
+    - uses: actions/upload-artifact@v2
+      with:
+        name: wheel
+        path: dist
+    - name: Install conda dependencies
+      run: |
+        conda install conda-build
+    - name: Build conda package
+      run: |
+        conda build conda-recipe --variants "{ 'version' : ['${{ steps.get_version.outputs.version }}']}" --output-folder conda-packages --no-anaconda-upload
+    - name: Convert conda package to win-64
+      run: |
+        conda convert --platform win-64 conda-packages/linux-64/or_datasets-* --output-dir conda-packages --force
+    - uses: actions/upload-artifact@v2
+      with:
+        name: conda
+        path: conda-packages
+
+  test_conda:
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os:
+          - ubuntu-18.04
+          - windows-2019
+        python-version:
+          - 3.8
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - uses: actions/download-artifact@v2
+      with:
+        name: conda
+        path: conda-packages
+    - name: Install conda package (Linux)
+      run: | 
+        eval "$(conda shell.bash hook)" && conda activate
+        conda install --channel ./conda-packages or-datasets --yes
+        conda install networkx --yes
+      if: startsWith(matrix.os, 'ubuntu')
+    - name: Install conda package (Windows)
+      run: | 
+        call c:\Miniconda\condabin\conda_hook.bat
+        call conda activate
+        call conda install conda-build
+        call conda index ./conda-packages
+        call conda search --channel ./conda-packages --override-channels
+        call conda install --channel ./conda-packages or-datasets --yes
+        call conda install networkx --yes
+      if: startsWith(matrix.os, 'windows')
+      shell: cmd
+
+  test_pip:
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os:
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - windows-2016
+          - windows-2019
+        python-version:
+          - 3.6
+          - 3.7 
+          - 3.8
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Get version
+      id: get_version
+      run: |
+        export PACKAGE_VERSION=$(echo ${GITHUB_REF:10} | cut -d "/" -f2)
+        echo ::set-output name=version::$PACKAGE_VERSION
+        echo PACKAGE_VERSION=$PACKAGE_VERSION
+      shell: bash
+    - name: Get development Version
+      id: get_dev_version
+      run: |
+        export PACKAGE_DEV_VERSION=${{ steps.get_version.outputs.version }}.dev${GITHUB_RUN_NUMBER}
+        echo ::set-output name=version::$PACKAGE_DEV_VERSION
+        echo PACKAGE_DEV_VERSION=$PACKAGE_DEV_VERSION
+      shell: bash
+    - uses: actions/download-artifact@v2
+      with:
+        name: wheel
+        path: dist
+    - name: Install from test
+      run: |
+        echo ${{ steps.get_dev_version.outputs.version }}
+        for i in 1 2 3 4 5; do pip install --index-url https://test.pypi.org/simple/ --no-deps or-datasets==${{ steps.get_dev_version.outputs.version }} && break || sleep 15; done
+        pip install cffi networkx
+      shell: bash
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [test_conda, test_pip]
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=version::$(echo ${GITHUB_REF:10} | cut -d "/" -f2)
+    - uses: actions/download-artifact@v2
+      with:
+        name: wheel
+        path: dist
+    - name: Zip wheel
+      run: | 
+        cd dist
+        zip -r wheel.zip *
+    - uses: actions/download-artifact@v2
+      with:
+        name: conda
+        path: conda-packages
+    - name: Zip conda
+      run: |
+        zip -r conda.zip conda-packages/linux-64/or_datasets* conda-packages/win-64/or_datasets*
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Asset wheel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/wheel.zip
+        asset_name: wheel.zip
+        asset_content_type: application/zip
+    - name: Upload Asset conda
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: conda.zip
+        asset_name: conda.zip
+        asset_content_type: application/zip
