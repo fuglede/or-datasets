@@ -13,7 +13,7 @@ pip install or-datasets
 or
 
 ```
-conda install -c or-datasets or-datasets
+conda install -c flowty or-datasets
 ```
 
 ## Usage
