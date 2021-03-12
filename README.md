@@ -10,12 +10,6 @@ For Python do
 pip install or-datasets
 ```
 
-or
-
-```
-conda install -c flowty or-datasets
-```
-
 ## Usage
 
 For Python the example pattern is
