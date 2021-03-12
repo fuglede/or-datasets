@@ -206,7 +206,7 @@ def _get_vehicle_profile(fleet: Optional[ElementTree.Element]):
         # capacity
         capacity = vehicle.find("capacity")
         if capacity is not None and capacity.text:
-            Q = float(capacity.text)
+            Q = int(float(capacity.text))
         else:
             raise KeyError("no 'capacity' element")
 
