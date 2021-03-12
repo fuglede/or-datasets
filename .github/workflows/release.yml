@@ -104,6 +104,9 @@ jobs:
         call conda install --channel ./conda-packages or-datasets --yes
       if: startsWith(matrix.os, 'windows')
       shell: cmd
+    - name: Import it
+      run: | 
+        python -c "import or_datasets"
 
   test_pip:
     runs-on: ${{ matrix.os }}
@@ -149,6 +152,9 @@ jobs:
         for i in 1 2 3 4 5; do pip install --index-url https://test.pypi.org/simple/ --no-deps or-datasets==${{ steps.get_dev_version.outputs.version }} && break || sleep 15; done
         pip install cffi networkx
       shell: bash
+    - name: Import it
+      run: | 
+        python -c "import or_datasets"
 
   release:
     runs-on: ubuntu-latest
