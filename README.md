@@ -30,5 +30,5 @@ This imports the `vrp_rep` module and fetches the instance named `R101_025` from
 
 ## Data Sources
 
-- VRP-REP http://vrp-rep.org
+- VRP-REP http://vrp-rep.org (supports only VRPTW instances for now)
 - LinerLib http://www.linerlib.org

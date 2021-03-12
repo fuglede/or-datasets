@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setup(
     name="or-datasets",
     version=__version__,
-    author="Simon Spoorendonk",
+    author="Flowty",
     author_email="info@flowty.ai",
     url="https://flowty.ai",
     description="OR Datasets",

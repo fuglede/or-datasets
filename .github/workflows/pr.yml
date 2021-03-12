@@ -69,3 +69,6 @@ jobs:
     - name: Install wheel
       run: | 
         pip install dist/or_datasets-0-py3-none-any.whl
+    - name: Import it
+      run: | 
+        python -c "import or_datasets"
