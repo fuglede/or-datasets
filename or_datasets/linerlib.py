@@ -2,7 +2,6 @@ import math
 import zipfile
 import csv
 import os
-import urllib
 import urllib.request
 import shutil
 import tempfile
@@ -17,7 +16,7 @@ def _fetch_linerlib_zip():
     if not os.path.exists(filename):
         # get data
         url = "https://github.com/blof/LINERLIB/archive/master.zip"
-        headers = {"Accept": "application/xml"}
+        headers = {"Accept": "application/zip"}
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req) as response:
             with open(filename, "wb") as out_file:

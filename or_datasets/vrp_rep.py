@@ -3,7 +3,6 @@ import zipfile
 import os
 import xml.etree.ElementTree as ElementTree
 import copy
-import urllib
 import urllib.request
 import shutil
 import tempfile
@@ -20,7 +19,7 @@ def fetch_vrp_rep(name: str, instance: str = None, return_raw=True) -> Bunch:
     bunch = fetch_vrp_rep(
         "solomon-1987-r1", instance="R101_025"
     )
-    name, n, e, c, d, Q, t, a, b, x, y = bunch["instance"]
+    name, n, E, c, d, Q, t, a, b, x, y = bunch["instance"]
     ```
 
     Parameters:
