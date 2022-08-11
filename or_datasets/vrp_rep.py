@@ -119,10 +119,6 @@ def _get_name(root: ElementTree.Element) -> Optional[str]:
     return None
 
 
-num = 27
-useNumer = False
-
-
 def _get_node_list(root: ElementTree.Element):
     network = root.find("network")
     if network:
@@ -133,9 +129,6 @@ def _get_node_list(root: ElementTree.Element):
             raise KeyError("no 'nodes' element")
     else:
         raise KeyError("no 'network' element")
-
-    if useNumer:
-        node_list = node_list[:num]
 
     # duplicate depot node
     end_node = copy.deepcopy(node_list[0])
@@ -232,9 +225,6 @@ def _get_requests(
 
     if requests:
         request_list = requests.findall("request")
-
-        if useNumer:
-            request_list = request_list[: num - 1]
 
         for request in request_list:
             id_attr = request.get("id")

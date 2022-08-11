@@ -65,11 +65,13 @@ def _parse_file(
                 bunch["instance"] = data
                 break
 
-            if not instance:
+            if not instance or (name.startswith(instance) and name != instance):
                 bunch["data"].append(data)
 
 
-def fetch_knapsack(name: str, instance: str = None, return_raw=True) -> Bunch:
+def fetch_knapsack(
+    name: str, instance: str = None, sizes: list = [], return_raw=True
+) -> Bunch:
     """
     Fetches knapsack data sets from http://hjemmesider.diku.dk/~pisinger/codes.html
 
@@ -78,10 +80,25 @@ def fetch_knapsack(name: str, instance: str = None, return_raw=True) -> Bunch:
     Usage for getting a Knapsack instance is:
     ```python
     bunch = fetch_knapsack(
-        "small", instance="knapPI_1_50_1000-1"
+        "small", instance="knapPI_1_50_1000_1"
     )
     name, n, c, p, w, z, x = bunch["instance"]
     ```
+
+    To get all 100 instances in a group do
+    ```python
+    bunch = fetch_knapsack(
+        "small", instance="knapPI_1_50_1000"
+    )
+    ```
+
+    Or to get all instances in a set
+    ```python
+    bunch = fetch_knapsack("small")
+    ```
+
+    Iterate through `bunch["data"]` to access instances.
+
 
     Parameters:
         name: String identifier of the dataset. Can contain multiple instances
@@ -97,16 +114,21 @@ def fetch_knapsack(name: str, instance: str = None, return_raw=True) -> Bunch:
     tf = _fetch_file(name)
 
     members = []
-    if instance:
+    if instance or sizes:
         for instancefile in tf.getnames():
             if instancefile.endswith(".txt"):
                 continue
 
             if instance:
-                rawInstanceFileName = "_".join(instance.split("_")[:-1])
+                rawInstanceFileName = "_".join(instance.split("_")[:4])
                 if instancefile == f"{rawInstanceFileName}.csv":
                     members = [tf.getmember(instancefile)]
                     break
+
+            if sizes:
+                size = int(instancefile.split("_")[2])
+                if size in sizes:
+                    members.append(tf.getmember(instancefile))
     else:
         members = tf.getmembers()
 
