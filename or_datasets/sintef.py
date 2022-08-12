@@ -108,7 +108,7 @@ def fetch_pdptw(name: str, instance: str = None, return_raw=True) -> Bunch:
                 D.append(delivery)
 
             # # filter first n reqs
-            # num = 10
+            # num = 20
             # indeces = [i for i,pickup in enumerate(P) if pickup == 0]
             # indeces = indeces[:num]
             # indeces += [D[i] for i in indeces[1:]]
