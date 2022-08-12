@@ -24,6 +24,7 @@ This imports the `vrp_rep` module and fetches the instance named `R101_025` from
 
 ## Data Sources
 
+- Transportation Optimization Portal of SINTEF Applied Mathematics, https://www.sintef.no/projectweb/top/ (supports only PDPTW)
 - Knapsack instances http://hjemmesider.diku.dk/~pisinger/codes.html (small coefficients, large coefficients, hard instances)
-- VRP-REP http://vrp-rep.org (supports only VRPTW instances for now)
+- VRP-REP http://vrp-rep.org (supports only VRPTW instances)
 - LinerLib http://www.linerlib.org
