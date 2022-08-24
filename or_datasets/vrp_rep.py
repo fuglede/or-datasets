@@ -39,7 +39,7 @@ def fetch_vrp_rep(name: str, instance: str = None, return_raw=True) -> Bunch:
 
     if not os.path.exists(filename):
         url = f"http://www.vrp-rep.org/datasets/download/{name}.zip"
-        headers = {"Accept": "application/xml"}
+        headers = {"Accept": "application/zip"}
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req) as response:
             with open(filename, "wb") as out_file:

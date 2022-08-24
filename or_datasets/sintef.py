@@ -21,8 +21,12 @@ def _fetch_file(key):
 
     if not os.path.exists(filename):
         # get data
-        url = f"https://www.sintef.no/contentassets/1338af68996841d3922bc8e87adc430c/{lookup[key]}"
-        headers = {"User-agent": "Mozilla/5.0"}
+        url = (
+            "https://www.sintef.no/contentassets/1338af68996841d3922bc8e87adc430c/"
+            f"{lookup[key]}"
+        )
+
+        headers = {"User-agent": "Mozilla/5.0", "Accept": "application/zip"}
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req) as response:
             with open(filename, "wb") as out_file:
@@ -31,6 +35,33 @@ def _fetch_file(key):
     zf = zipfile.ZipFile(filename, "r")
 
     return zf
+
+
+def _parse_edge_data(n, x, y, s):
+    E = []
+    c = []
+    t = []
+
+    for i in range(n):
+        for j in range(n):
+            if j <= i:
+                continue
+            value = (
+                int(math.sqrt(math.pow(x[i] - x[j], 2) + math.pow(y[i] - y[j], 2)) * 10)
+                / 10
+            )
+
+            if i != n - 1 and j != 0 and not (i == 0 and j == n - 1):
+                c.append(value)
+                t.append(value + s[i])
+                E.append((i, j))
+
+            if j != n - 1 and i != 0:
+                c.append(value)
+                t.append(value + s[j])
+                E.append((j, i))
+
+    return E, c, t
 
 
 def fetch_pdptw(name: str, instance: str = None, return_raw=True) -> Bunch:
@@ -69,13 +100,17 @@ def fetch_pdptw(name: str, instance: str = None, return_raw=True) -> Bunch:
                 path_prefix, instancefile = instancefile.split("/")
 
             if instancefile == f"{instance}.txt":
-                members = [ "/".join([path_prefix, instancefile]) if path_prefix else instancefile ]
+                members = [
+                    "/".join([path_prefix, instancefile])
+                    if path_prefix
+                    else instancefile
+                ]
                 break
         else:
             members.append(instancefile)
 
     bunch = Bunch(data=[], instance=None, DESCR="PDPTW")
-    for member in members:        
+    for member in members:
         with zf.open(member) as fh:
             # special naming for 100 set
             if name.endswith("100"):
@@ -122,7 +157,7 @@ def fetch_pdptw(name: str, instance: str = None, return_raw=True) -> Bunch:
             # s = [j for i,j in enumerate(s) if (i in indeces)]
             # P = [indeces.index(j) for i,j in enumerate(P) if (i in indeces)]
             # D = [indeces.index(j) for i,j in enumerate(D) if (i in indeces)]
-            
+
             # duplicate depot
             x.append(x[0])
             y.append(y[0])
@@ -134,29 +169,8 @@ def fetch_pdptw(name: str, instance: str = None, return_raw=True) -> Bunch:
             D.append(D[0])
 
             n = len(x)
-            E = []
-            c = []
-            t = []
 
-            for i in range(n):
-                for j in range(n):
-                    if j <= i:
-                        continue
-
-                    value = (
-                        int(math.sqrt(math.pow(x[i] - x[j], 2) + math.pow(y[i] - y[j], 2)) * 10)
-                        / 10
-                    )
-
-                    if i != n - 1 and j != 0 and not (i == 0 and j == n - 1):
-                        c.append(value)
-                        t.append(value + s[i])
-                        E.append((i, j))
-
-                    if j != n - 1 and i != 0:
-                        c.append(value)
-                        t.append(value + s[j])
-                        E.append((j, i))
+            E, c, t = _parse_edge_data(n, x, y, s)
 
             data = (name, n, E, k, c, d, Q, t, a, b, x, y, t, P, D)
             bunch["data"].append(data)

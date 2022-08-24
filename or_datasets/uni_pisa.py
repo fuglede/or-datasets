@@ -4,7 +4,6 @@ import urllib.request
 import shutil
 import tempfile
 from or_datasets import Bunch
-from typing import List, Tuple, Optional
 
 
 def _fetch_file(key):
@@ -32,9 +31,34 @@ def _fetch_file(key):
     return tf
 
 
+def _get_edges(m, fh):
+    E = []
+    c = []
+    Q = []
+    for i in range(m):
+        source, target, cost, capacity = [int(x) for x in fh.readline().split()]
+        E.append((source - 1, target - 1))  # we want zero indexed nodes
+        c.append(cost)
+        Q.append(capacity)
+
+    return E, c, Q
+
+
+def _get_commodities(k, fh):
+    OD = []
+    D = []
+    for i in range(k):
+        origin, dest, demand = [int(x) for x in fh.readline().split()]
+        OD.append((origin - 1, dest - 1))  # we want zero indexed nodes
+        D.append(demand)
+
+    return OD, D
+
+
 def fetch_linear_mcf(name: str, instance: str = None, return_raw=True) -> Bunch:
     """
-    Fetches multicommodity data sets from http://groups.di.unipi.it/optimize/Data/MMCF.html
+    Fetches multicommodity data sets from
+    http://groups.di.unipi.it/optimize/Data/MMCF.html
 
     Possible sets are `planar` and `grid`.
 
@@ -85,22 +109,10 @@ def fetch_linear_mcf(name: str, instance: str = None, return_raw=True) -> Bunch:
             k = int(fh.readline())
 
             # edges
-            E = []
-            c = []
-            Q = []
-            for i in range(m):
-                source, target, cost, capacity = [int(x) for x in fh.readline().split()]
-                E.append((source - 1, target - 1))  # we want zero indexed nodes
-                c.append(cost)
-                Q.append(capacity)
+            E, c, Q = _get_edges(m, fh)
 
             # commodities
-            OD = []
-            D = []
-            for i in range(k):
-                origin, dest, demand = [int(x) for x in fh.readline().split()]
-                OD.append((origin - 1, dest - 1))  # we want zero indexed nodes
-                D.append(demand)
+            OD, D = _get_commodities(k, fh)
 
         data = (name, n, m, k, E, c, Q, OD, D)
         bunch["data"].append(data)
@@ -114,7 +126,8 @@ def fetch_linear_mcf(name: str, instance: str = None, return_raw=True) -> Bunch:
 
 def fetch_mcf_network_design(name: str, instance: str = None, return_raw=True) -> Bunch:
     """
-    Fetches multicommodity data sets from http://groups.di.unipi.it/optimize/Data/MMCF.html
+    Fetches multicommodity data sets from
+    http://groups.di.unipi.it/optimize/Data/MMCF.html
 
     Possible sets are `Canad-C`, .
 
