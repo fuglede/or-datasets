@@ -129,7 +129,7 @@ def fetch_mcf_network_design(name: str, instance: str = None, return_raw=True) -
     Fetches multicommodity data sets from
     http://groups.di.unipi.it/optimize/Data/MMCF.html
 
-    Possible sets are `Canad-C`, .
+    Possible sets are `Canad-C`, `Canad-C+`, `Canad-R`
 
     Usage for getting a FCMCF instance is:
     ```python
@@ -163,7 +163,7 @@ def fetch_mcf_network_design(name: str, instance: str = None, return_raw=True) -
 
     bunch = Bunch(data=[], instance=None, DESCR="FCMCF")
     for member in members:
-        name = member.name
+        name = member.name.removesuffix(".dow")
 
         with tf.extractfile(member) as fh:
             # skip first line
