@@ -22,6 +22,91 @@ def _fetch_file(instance):
     return file
 
 
+def fetch_gap(name: str, instance: str, return_raw=True) -> Bunch:
+    """
+    Fetches GAP data instances from
+    http://people.brunel.ac.uk/~mastjjb/jeb/orlib/gapinfo.html
+
+    Possible instances are `gap{i}-{m}{n}-{j}` for sets i=1,...,12,a,b,c,d and
+    instance with m agents and n jobs where j is a number up to 5 for numeric instance
+    types and 6 otherwise.
+
+    Instance sets i=1,...,12 are solved as maximization problems and therefore with
+    negative costs.
+
+    Usage for getting amn GAP instance is:
+    ```python
+    bunch = fetch_rcspp(instance="gap1")
+    name, n, m, k, E, c, w, a, b = bunch["instance"]
+    ```
+
+    Parameters:
+        name: String identifier of the dataset. Can contain multiple instances
+        instance: String identifier of the instance. If `None` the entire set is
+            returned.
+
+        return_raw: If `True` returns the raw data as a tuple
+
+    Returns:
+        Network information.
+    """
+
+    bunch = Bunch(data=[], instance=None, DESCR="GAP")
+
+    instance_num = None
+    if instance:
+        instance_num = int(instance.split("-")[1]) if "-" in instance else None        
+
+    with _fetch_file(name) as file:
+        # problems per file
+        P = int(file.readline())
+        
+        for p in range(P):
+            m, n = [int(x) for x in file.readline().split()]
+
+            have_numeric_prefix = name.removeprefix("gap").isnumeric()
+            set_prefix = "c" if have_numeric_prefix else name.removeprefix("gap")
+            instance_name = f"{set_prefix}{m}{n}-{p+1}"
+
+            c = []
+            d = []
+
+            for i in range(m):
+                nums = [int(x) for x in file.readline().split()]
+                # due too linebreak
+                while(len(nums) < n):
+                    nums += [int(x) for x in file.readline().split()]
+
+                if have_numeric_prefix:
+                    nums = [ -x for x in nums]
+
+                c += [nums]
+
+            for i in range(m):
+                nums = [int(x) for x in file.readline().split()]
+                # due too linebreak
+                while(len(nums) < n):
+                    nums += [int(x) for x in file.readline().split()]                    
+                d += [nums]
+
+            nums = [int(x) for x in file.readline().split()]
+            # due too linebreak
+            while(len(nums) < m):
+                nums += [int(x) for x in file.readline().split()]      
+            Q = nums
+
+            if instance_num and instance_num != p+1:
+                continue
+
+            data = (instance_name, n, m, c, d, Q)
+            bunch["data"].append(data)
+            if instance == instance_name:
+                bunch["instance"] = data
+                break
+
+    return bunch
+
+
 def fetch_rcspp(instance: str, return_raw=True) -> Bunch:
     """
     Fetches RCSPP data instances from
@@ -36,7 +121,6 @@ def fetch_rcspp(instance: str, return_raw=True) -> Bunch:
     ```
 
     Parameters:
-        name: String identifier of the dataset. Can contain multiple instances
         instance: String identifier of the instance. If `None` the entire set is
             returned.
 
@@ -85,5 +169,4 @@ def fetch_rcspp(instance: str, return_raw=True) -> Bunch:
         if instance:
             bunch["instance"] = data
 
-    # file.close()
     return bunch
