@@ -271,11 +271,11 @@ class GraphBuilder:
     """The forfeit edge cost."""
 
     # edge attributes
-    cost: List[float] = []
+    cost: List[float]
     """The edge costs."""
-    travelTime: List[float] = []
+    travelTime: List[float]
     """The edge transshipment times."""
-    capacity: List[int] = []
+    capacity: List[int]
     """The edge capacities."""
 
     def __init__(self, data, network):
@@ -293,6 +293,9 @@ class GraphBuilder:
         self.rotationName, self.rotations, self.speed, self.capacities = network[
             "instance"
         ]
+        self.cost = []
+        self.travelTime = []
+        self.capacity = []
 
     def portCallNodes(self) -> List[str]:
         """
