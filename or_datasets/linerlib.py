@@ -59,7 +59,7 @@ def _convertToNumeric(key, value):
         return float(value)
 
     if value and key in booleanKeys:
-        return bool(value)
+        return value == '1'
 
     return value
 
